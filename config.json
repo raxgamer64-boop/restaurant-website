@@ -1,0 +1,13 @@
+{
+  "restaurant": {
+    "name": "Datta Restaurant",
+    "phone": "+919546320565",
+    "whatsapp": "919546320565",
+    "address": "Ambedkar Chowk, Maheshpur, Pakur, Jharkhand, India",
+    "hours": "Mon–Sun · 11:00 AM – 11:00 PM",
+    "maps": "https://www.google.com/maps/search/?api=1&query=Ambedkar%20Chowk%20Maheshpur%20Pakur%20Jharkhand%20India",
+    "upiId": "9546320565-2@ibl",
+    "upiName": "Datta Restaurant"
+  },
+  "note": "UPI payments are available via the restaurant UPI ID and QR. Menu prices are demo/sample prices until the real menu is provided."
+}
