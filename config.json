@@ -1,0 +1,42 @@
+{
+  "restaurant": {
+    "name": "Saffron House",
+    "phone": "+919546320565",
+    "whatsapp": "919546320565",
+    "address": "12 MG Road, Patna, Bihar",
+    "hours": "Mon–Sun · 11:00 AM – 11:00 PM",
+    "maps": "https://maps.google.com/?q=MG+Road+Patna"
+  },
+  "menu": [
+    {
+      "id": 1,
+      "name": "Crispy Paneer Tikka",
+      "price": 249
+    },
+    {
+      "id": 2,
+      "name": "Butter Chicken",
+      "price": 349
+    },
+    {
+      "id": 3,
+      "name": "Royal Chicken Biryani",
+      "price": 329
+    },
+    {
+      "id": 4,
+      "name": "Dal Makhani",
+      "price": 229
+    },
+    {
+      "id": 5,
+      "name": "Tandoori Chicken",
+      "price": 319
+    },
+    {
+      "id": 6,
+      "name": "Mango Lassi",
+      "price": 129
+    }
+  ]
+}
