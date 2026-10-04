@@ -1,1 +1,509 @@
-doctype html> <html lang="en"> <head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width,initial-scale=1"> <title>Admin Dashboard | Datta Restaurant</title> <link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"> <link rel="stylesheet" href="admin.css"> </head> <body> <script src="config.js"></script> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <script src="auth.js"></script> <script> if(!requireAuth('admin')) document.documentElement.innerHTML=''; </script> <header class="admin-top"> <div> <span class="mark">✦</span> <div> <b>Datta Restaurant</b> <small>Admin Dashboard</small> </div> </div> <div class="top-actions"> <a href="index.html">View Website</a> <button onclick="logout()">Logout</button> </div> </header> <main class="admin-wrap"> <section class="welcome"> <div> <p>CONTROL CENTER</p> <h1>Good morning, <em>Admin.</em></h1> <span>Manage orders, bookings and your restaurant operations.</span> </div> <span class="live">● LIVE</span> </section> <section class="stats"> <div> <small>Orders</small> <b id="ordersCount">0</b> <span>All customer orders</span> </div> <div> <small>Bookings</small> <b id="bookingsCount">0</b> <span>Tables & private rooms</span> </div> <div> <small>Revenue</small> <b id="revenue">₹0</b> <span>Recorded order value</span> </div> <div> <small>Customers</small> <b id="customersCount">0</b> <span>Registered accounts</span> </div> </section> <section class="grid"> <div class="panel"> <div class="panel-head"> <div> <p>RECENT ORDERS</p> <h2>Customer Orders</h2> </div> <button onclick="render()">↻ Refresh</button> </div> <div id="ordersTable" class="table-wrap"></div> </div> <div class="panel"> <div class="panel-head"> <div> <p>RESERVATIONS</p> <h2>Table & Private Room</h2> </div> </div> <div id="bookingsTable" class="table-wrap"></div> </div> </section> <section class="panel menu-admin"> <div class="panel-head"> <div> <p>MENU</p> <h2>Menu Management</h2> <span> Demo controls — changes are stored on this device until a database is connected. </span> </div> <button onclick="alert('Connect a database to publish menu changes across all devices.')"> ＋ Add Item </button> </div> <div class="menu-admin-grid"> <div> <b>Chicken Biryani</b> <span>₹180 · Biryani</span> </div> <div> <b>Paneer Butter Masala</b> <span>₹150 · Main Course</span> </div> <div> <b>Tandoori Chicken</b> <span>₹200 · Tandoor</span> </div> <div> <b>Chicken Curry</b> <span>₹160 · Main Course</span> </div> <div> <b>Veg Fried Rice</b> <span>₹90 · Chinese</span> </div> <div> <b>Paneer Tikka</b> <span>₹130 · Starters</span> </div> </div> </section> <p class="security-note"> 🔐 <b>Important:</b> This GitHub Pages version uses browser storage for the demo. It is not suitable for real multi-device admin/security. For a real restaurant launch, connect Firebase/Supabase authentication + database so customer accounts, orders, bookings and menu changes sync securely. </p> </main> <script> function read(k){ return JSON.parse(localStorage.getItem(k)||'[]'); } function money(n){ return '₹'+Number(n||0).toLocaleString('en-IN'); } function render(){ const orders=read(ORDERS_KEY); const bookings=read(BOOKINGS_KEY); const users=getUsers(); ordersCount.textContent=orders.length; bookingsCount.textContent=bookings.length; customersCount.textContent=users.length; revenue.textContent=money( orders.reduce((s,o)=>s+(o.total||0),0) ); ordersTable.innerHTML=orders.length ? '<table><thead><tr><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>' + orders.slice(0,20).map(o=> '<tr>' + '<td><b>'+esc(o.customerName||'Guest')+'</b><small>'+esc(o.phone||o.email||'')+'</small></td>' + '<td>'+esc((o.items||[]).map(i=>i.name+' × '+i.qty).join(', '))+'</td>' + '<td>'+money(o.total)+'</td>' + '<td><span class="status">'+esc(o.status||'New')+'</span></td>' + '</tr>' ).join('') + '</tbody></table>' : '<div class="empty">No orders yet.</div>'; bookingsTable.innerHTML=bookings.length ? '<table><thead><tr><th>Name</th><th>Type</th><th>Date/Time</th><th>Guests</th></tr></thead><tbody>' + bookings.slice(0,20).map(b=> '<tr>' + '<td><b>'+esc(b.name)+'</b><small>'+esc(b.phone||'')+'</small></td>' + '<td>'+esc(b.type)+'</td>' + '<td>'+esc(b.date)+'<small>'+esc(b.time)+'</small></td>' + '<td>'+esc(b.guests)+'</td>' + '</tr>' ).join('') + '</tbody></table>' : '<div class="empty">No bookings yet.</div>'; } function esc(v){ return String(v??'').replace( /[&<>"']/g, c=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]) ); } render(); </script> </body> </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Datta Restaurant - Admin Dashboard</title>
+
+  <link rel="stylesheet" href="admin.css">
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    (async () => {
+      const user = await requireAuth('admin');
+
+      if (!user) {
+        document.documentElement.innerHTML = '';
+      }
+    })();
+  </script>
+</head>
+
+<body>
+
+  <header class="admin-header">
+    <div>
+      <h1>Datta Restaurant</h1>
+      <p>Admin Dashboard</p>
+    </div>
+
+    <div class="admin-actions">
+      <a href="index.html" class="btn">View Website</a>
+      <button class="btn danger" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+
+  <main class="admin-container">
+
+    <!-- STATS -->
+    <section class="stats-grid">
+
+      <div class="stat-card">
+        <span>Orders</span>
+        <strong id="ordersCount">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Bookings</span>
+        <strong id="bookingsCount">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Revenue</span>
+        <strong id="revenueTotal">₹0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Customers</span>
+        <strong id="customersCount">0</strong>
+      </div>
+
+    </section>
+
+
+    <!-- RECENT ORDERS -->
+    <section class="admin-section">
+
+      <div class="section-head">
+        <div>
+          <h2>Recent Orders</h2>
+          <p>Latest customer orders</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+
+          <tbody id="ordersTable">
+
+            <tr>
+              <td colspan="5">Loading orders...</td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- BOOKINGS -->
+    <section class="admin-section">
+
+      <div class="section-head">
+        <div>
+          <h2>Recent Bookings</h2>
+          <p>Latest table and private room bookings</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Guests</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="bookingsTable">
+
+            <tr>
+              <td colspan="7">Loading bookings...</td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- MENU MANAGEMENT -->
+    <section class="admin-section">
+
+      <div class="section-head">
+
+        <div>
+          <h2>Menu Management</h2>
+          <p>Manage restaurant menu items</p>
+        </div>
+
+        <button
+          class="btn primary"
+          onclick="addMenuItem()">
+          + Add Item
+        </button>
+
+      </div>
+
+
+      <div class="menu-admin-grid" id="menuAdminGrid">
+
+        <div class="menu-admin-card">
+
+          <div>
+            <h3>Chicken Biryani</h3>
+            <p>Aromatic basmati rice with tender chicken & special spices</p>
+          </div>
+
+          <strong>₹180</strong>
+
+        </div>
+
+
+        <div class="menu-admin-card">
+
+          <div>
+            <h3>Paneer Butter Masala</h3>
+            <p>Rich & flavorful paneer in creamy tomato gravy</p>
+          </div>
+
+          <strong>₹150</strong>
+
+        </div>
+
+
+        <div class="menu-admin-card">
+
+          <div>
+            <h3>Tandoori Chicken</h3>
+            <p>Juicy, smoky and full of flavour from the tandoor</p>
+          </div>
+
+          <strong>₹200</strong>
+
+        </div>
+
+
+        <div class="menu-admin-card">
+
+          <div>
+            <h3>Chicken Curry</h3>
+            <p>Traditional desi style chicken curry with rich gravy</p>
+          </div>
+
+          <strong>₹160</strong>
+
+        </div>
+
+
+        <div class="menu-admin-card">
+
+          <div>
+            <h3>Veg Fried Rice</h3>
+            <p>Fresh vegetables with aromatic rice</p>
+          </div>
+
+          <strong>₹90</strong>
+
+        </div>
+
+
+        <div class="menu-admin-card">
+
+          <div>
+            <h3>Paneer Tikka</h3>
+            <p>Char-grilled paneer, peppers & mint chutney</p>
+          </div>
+
+          <strong>₹130</strong>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- SECURITY -->
+    <section class="admin-section security-note">
+
+      <h2>Security</h2>
+
+      <p>
+        Admin access is protected by Supabase Authentication
+        and database Row Level Security.
+      </p>
+
+      <p>
+        Never put a Supabase secret/service-role key in this website.
+      </p>
+
+    </section>
+
+  </main>
+
+
+  <script>
+
+    function money(value) {
+      return '₹' + Number(value || 0).toLocaleString('en-IN');
+    }
+
+
+    function formatDate(value) {
+
+      if (!value) return '-';
+
+      const d = new Date(value);
+
+      if (Number.isNaN(d.getTime())) return value;
+
+      return d.toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+    }
+
+
+    async function loadAdminData() {
+
+      try {
+
+        const user = await requireAuth('admin');
+
+        if (!user) return;
+
+
+        /* ORDERS */
+
+        const { data: orders, error: ordersError } =
+          await supabaseClient
+            .from('orders')
+            .select('*')
+            .order('created_at', {
+              ascending: false
+            });
+
+        if (ordersError) {
+          console.error('Orders error:', ordersError);
+        }
+
+
+        const orderList = orders || [];
+
+
+        document.getElementById('ordersCount').textContent =
+          orderList.length;
+
+
+        const revenue = orderList.reduce(
+          (sum, order) =>
+            sum + Number(order.total || 0),
+          0
+        );
+
+
+        document.getElementById('revenueTotal').textContent =
+          money(revenue);
+
+
+        const ordersTable =
+          document.getElementById('ordersTable');
+
+
+        if (!orderList.length) {
+
+          ordersTable.innerHTML = `
+            <tr>
+              <td colspan="5">
+                No orders yet.
+              </td>
+            </tr>
+          `;
+
+        } else {
+
+          ordersTable.innerHTML =
+            orderList
+              .slice(0, 20)
+              .map(order => `
+
+                <tr>
+
+                  <td>
+                    #${String(order.id || '').slice(0, 8)}
+                  </td>
+
+                  <td>
+                    ${order.customer_name || '-'}
+                  </td>
+
+                  <td>
+                    ${money(order.total)}
+                  </td>
+
+                  <td>
+                    ${order.status || 'New'}
+                  </td>
+
+                  <td>
+                    ${formatDate(order.created_at)}
+                  </td>
+
+                </tr>
+
+              `)
+              .join('');
+
+        }
+
+
+        /* BOOKINGS */
+
+        const { data: bookings, error: bookingsError } =
+          await supabaseClient
+            .from('bookings')
+            .select('*')
+            .order('created_at', {
+              ascending: false
+            });
+
+
+        if (bookingsError) {
+          console.error('Bookings error:', bookingsError);
+        }
+
+
+        const bookingList = bookings || [];
+
+
+        document.getElementById('bookingsCount').textContent =
+          bookingList.length;
+
+
+        const bookingsTable =
+          document.getElementById('bookingsTable');
+
+
+        if (!bookingList.length) {
+
+          bookingsTable.innerHTML = `
+            <tr>
+              <td colspan="7">
+                No bookings yet.
+              </td>
+            </tr>
+          `;
+
+        } else {
+
+          bookingsTable.innerHTML =
+            bookingList
+              .slice(0, 20)
+              .map(booking => `
+
+                <tr>
+
+                  <td>
+                    ${booking.name || '-'}
+                  </td>
+
+                  <td>
+                    ${booking.phone || '-'}
+                  </td>
+
+                  <td>
+                    ${booking.date || '-'}
+                  </td>
+
+                  <td>
+                    ${booking.time || '-'}
+                  </td>
+
+                  <td>
+                    ${booking.guests || '-'}
+                  </td>
+
+                  <td>
+                    ${booking.type || 'Table'}
+                  </td>
+
+                  <td>
+                    ${booking.status || 'New'}
+                  </td>
+
+                </tr>
+
+              `)
+              .join('');
+
+        }
+
+
+        /* CUSTOMERS */
+
+        const { count: customerCount, error: customerError } =
+          await supabaseClient
+            .from('profiles')
+            .select('*', {
+              count: 'exact',
+              head: true
+            })
+            .eq('role', 'customer');
+
+
+        if (customerError) {
+          console.error('Customers error:', customerError);
+        }
+
+
+        document.getElementById('customersCount').textContent =
+          customerCount || 0;
+
+
+      } catch (error) {
+
+        console.error('Admin dashboard error:', error);
+
+      }
+
+    }
+
+
+    function addMenuItem() {
+
+      alert(
+        'Menu management database connection will be added next.'
+      );
+
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadAdminData
+    );
+
+  </script>
+
+</body>
+</html>
