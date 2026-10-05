@@ -15,41 +15,48 @@
       "'": "&#39;"
     }[m]));
 
-  const getData = () => {
+  function getData() {
     try {
-      return JSON.parse(localStorage.getItem(KEY)) || window.DEFAULT_DATA;
+      const raw = localStorage.getItem(KEY);
+      const data = raw ? JSON.parse(raw) : window.DEFAULT_DATA;
+      return data || window.DEFAULT_DATA;
     } catch {
       return window.DEFAULT_DATA;
     }
-  };
+  }
 
-  const getCart = () => {
+  function getCart() {
     try {
       return JSON.parse(localStorage.getItem(CART_KEY)) || [];
     } catch {
       return [];
     }
-  };
+  }
 
-  const saveCart = cart =>
+  function saveCart(cart) {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }
 
-  const getCustomer = () => {
+  function getCustomer() {
     try {
       return JSON.parse(localStorage.getItem(CUSTOMER_KEY)) || null;
     } catch {
       return null;
     }
-  };
+  }
 
-  const saveCustomer = c =>
+  function saveCustomer(c) {
     localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
+  }
 
-  const wa = text =>
-    `https://wa.me/${getData().brand.whatsapp}?text=${encodeURIComponent(text)}`;
+  function wa(text) {
+    const d = getData();
+    return `https://wa.me/${d.brand.whatsapp}?text=${encodeURIComponent(text)}`;
+  }
 
-  const money = n =>
-    `₹${Number(n || 0).toLocaleString("en-IN")}`;
+  function money(n) {
+    return `₹${Number(n || 0).toLocaleString("en-IN")}`;
+  }
 
   let toastTimer;
 
@@ -59,7 +66,10 @@
 
     document.title = `${b.name} | ${b.tagline}`;
 
-    document.getElementById("site").innerHTML = `
+    const site = $("#site");
+    if (!site) return;
+
+    site.innerHTML = `
       <div class="top">
         OPEN TODAY · ${esc(b.hours)}
         <span>·</span>
@@ -67,13 +77,9 @@
       </div>
 
       <header class="siteHeader" id="siteHeader">
-        <a
-          class="logo"
-          href="#home"
-          aria-label="${esc(b.name)} home"
-        >
-          <span class="logoMark">D</span>
 
+        <a class="logo" href="#home" aria-label="${esc(b.name)} home">
+          <span class="logoMark">D</span>
           <span class="logoText">
             <b>${esc(b.name)}</b>
             <small>${esc(b.tagline)}</small>
@@ -81,19 +87,11 @@
         </a>
 
         <div class="headerActions">
-          <button
-            class="accountBtn"
-            id="accountBtn"
-            aria-label="Customer account"
-          >
+          <button class="accountBtn" id="accountBtn">
             ${getCustomer() ? "Account" : "Login"}
           </button>
 
-          <button
-            class="cartBtn"
-            id="cartBtn"
-            aria-label="Open cart"
-          >
+          <button class="cartBtn" id="cartBtn">
             Cart <span id="cartCount">0</span>
           </button>
 
@@ -101,8 +99,7 @@
             class="hamb"
             id="hamb"
             aria-label="Open menu"
-            aria-expanded="false"
-          >
+            aria-expanded="false">
             ☰
           </button>
         </div>
@@ -115,31 +112,34 @@
           <a href="#contact">Contact</a>
           <a class="navCta" href="#reserve">Reserve</a>
         </nav>
+
       </header>
 
       <main>
 
         <section class="hero" id="home">
+
           <div
             class="heroBg"
-            style="--bg:url('${esc(d.hero.image)}')"
-          ></div>
+            style="--bg:url('${esc(d.hero?.image || "")}')">
+          </div>
 
           <div class="heroOverlay"></div>
           <div class="heroGlow"></div>
 
           <div class="heroIn reveal">
+
             <div class="eyebrow">
-              ${esc(d.hero.eyebrow)}
+              ${esc(d.hero?.eyebrow || "")}
             </div>
 
             <h1>
-              ${esc(d.hero.title)}
-              <span>${esc(d.hero.emphasis)}</span>
+              ${esc(d.hero?.title || "")}
+              <span>${esc(d.hero?.emphasis || "")}</span>
             </h1>
 
             <p class="heroDesc">
-              ${esc(d.hero.description)}
+              ${esc(d.hero?.description || "")}
             </p>
 
             <div class="actions">
@@ -155,53 +155,52 @@
             <small class="owner">
               OWNER · ${esc(b.owner)}
             </small>
+
           </div>
 
           <div class="heroCard">
             <div
               class="miniImg"
               style="--mini:url('${esc(
-                d.menu[0]?.image || d.hero.image
-              )}')"
-            ></div>
+                d.menu?.[0]?.image || d.hero?.image || ""
+              )}')">
+            </div>
 
-            <b>
-              ${esc(d.menu[0]?.name || "House Special")}
-            </b>
+            <b>${esc(d.menu?.[0]?.name || "House Special")}</b>
 
             <small>
-              Signature selection · ₹${esc(
-                d.menu[0]?.price || "—"
-              )}
+              Signature selection · ₹${esc(d.menu?.[0]?.price || "—")}
             </small>
           </div>
 
           <div class="heroScroll">
             SCROLL <span>↓</span>
           </div>
+
         </section>
 
         <section class="light" id="story">
+
           <div class="sectionHead reveal">
 
             <div class="tag">
-              01 — ${esc(
-                d.story.eyebrow || "OUR STORY"
-              )}
+              01 — ${esc(d.story?.eyebrow || "OUR STORY")}
             </div>
 
             <div class="split">
 
               <div>
                 <h2 class="sectionTitle">
-                  ${esc(d.story.title)}
-                  <em>${esc(d.story.emphasis)}</em>
+                  ${esc(d.story?.title || "")}
+                  <em>${esc(d.story?.emphasis || "")}</em>
                 </h2>
               </div>
 
               <div class="copy">
-                <p>${esc(d.story.p1)}</p>
-                <p>${esc(d.story.p2)}</p>
+
+                <p>${esc(d.story?.p1 || "")}</p>
+
+                <p>${esc(d.story?.p2 || "")}</p>
 
                 <div class="sig">
                   ${esc(b.owner)}
@@ -209,13 +208,17 @@
                     Owner · ${esc(b.name)}
                   </small>
                 </div>
+
               </div>
 
             </div>
+
           </div>
+
         </section>
 
         <section class="dark" id="menu">
+
           <div class="sectionHead reveal">
 
             <div class="head">
@@ -232,25 +235,27 @@
               </div>
 
               <p>
-                Choose your dishes, set the quantity
-                and add them to your cart. Checkout is
-                designed for a fast mobile-first order.
+                Choose your dishes, set the quantity and add them
+                to your cart. Checkout is designed for a fast
+                mobile-first order.
               </p>
 
             </div>
 
             <div class="tabs" id="tabs"></div>
+
             <div class="items" id="items"></div>
 
           </div>
+
         </section>
 
         <section class="experience" id="experience">
 
           <div
             class="expBg"
-            style="--bg:url('${esc(d.experience.image)}')"
-          ></div>
+            style="--bg:url('${esc(d.experience?.image || "")}')">
+          </div>
 
           <div class="expShade"></div>
 
@@ -261,8 +266,8 @@
             </div>
 
             <h2 class="sectionTitle">
-              ${esc(d.experience.title)}
-              <em>${esc(d.experience.emphasis)}</em>
+              ${esc(d.experience?.title || "")}
+              <em>${esc(d.experience?.emphasis || "")}</em>
             </h2>
 
             <div class="points">
@@ -292,7 +297,9 @@
               </div>
 
             </div>
+
           </div>
+
         </section>
 
         <section class="light" id="gallery">
@@ -318,15 +325,11 @@
                       <button
                         class="galleryItem"
                         data-img="${esc(x)}"
-                        aria-label="Open gallery image ${i + 1}"
-                      >
+                        aria-label="Open gallery image ${i + 1}">
                         <img
                           loading="lazy"
                           src="${esc(x)}"
-                          alt="${esc(
-                            b.name
-                          )} gallery image ${i + 1}"
-                        >
+                          alt="${esc(b.name)} gallery image ${i + 1}">
                       </button>
                     `
                   )
@@ -335,7 +338,9 @@
               </div>
 
             </div>
+
           </div>
+
         </section>
 
         <section class="dark" id="reserve">
@@ -343,6 +348,7 @@
           <div class="sectionHead reserve reveal">
 
             <div>
+
               <div class="tag">
                 05 — RESERVATIONS
               </div>
@@ -353,9 +359,10 @@
               </h2>
 
               <p>
-                Send a reservation request directly
-                to the restaurant team on WhatsApp.
+                Send a reservation request directly to the
+                restaurant team on WhatsApp.
               </p>
+
             </div>
 
             <form id="book">
@@ -364,16 +371,14 @@
                 required
                 name="name"
                 autocomplete="name"
-                placeholder="Your name"
-              >
+                placeholder="Your name">
 
               <div class="tw">
 
                 <input
                   required
                   name="date"
-                  type="date"
-                >
+                  type="date">
 
                 <select name="guests">
                   <option>2 guests</option>
@@ -388,19 +393,18 @@
               <input
                 required
                 name="time"
-                type="time"
-              >
+                type="time">
 
               <button
                 class="btn gold"
-                type="submit"
-              >
+                type="submit">
                 Request Reservation →
               </button>
 
             </form>
 
           </div>
+
         </section>
 
         <section class="dark contact" id="contact">
@@ -422,13 +426,11 @@
 
                 <div class="lines">
 
-                  <a
-                    href="tel:${esc(
-                      b.phone.replace(/\s/g, "")
-                    )}"
-                  >
+                  <a href="tel:${esc(
+                    (b.phone || "").replace(/\s/g, "")
+                  )}">
                     <small>CALL</small>
-                    <strong>${esc(b.phone)}</strong>
+                    <strong>${esc(b.phone || "")}</strong>
                   </a>
 
                   <a
@@ -436,44 +438,40 @@
                     rel="noopener"
                     href="${wa(
                       "Hello Dutta Restaurant, I would like to know more about the restaurant."
-                    )}"
-                  >
+                    )}">
                     <small>WHATSAPP</small>
                     <strong>Chat with us</strong>
                   </a>
 
                   <div>
                     <small>UPI</small>
-                    <strong>${esc(b.upi)}</strong>
+                    <strong>${esc(b.upi || "")}</strong>
                   </div>
 
                   <div>
                     <small>ADDRESS</small>
-                    <strong>${esc(b.address)}</strong>
+                    <strong>${esc(b.address || "")}</strong>
                   </div>
 
                   <div>
                     <small>OPENING HOURS</small>
-                    <strong>${esc(b.hours)}</strong>
+                    <strong>${esc(b.hours || "")}</strong>
                   </div>
 
                 </div>
+
               </div>
 
               <div class="map">
-
                 <div class="mapPin">D</div>
-
                 <b>${esc(b.name)}</b>
-
-                <span>
-                  ${esc(b.address)}
-                </span>
-
+                <span>${esc(b.address || "")}</span>
               </div>
 
             </div>
+
           </div>
+
         </section>
 
       </main>
@@ -482,18 +480,14 @@
         <b>${esc(b.name)}</b>
         <span>${esc(b.tagline)}</span>
         <span>
-          © ${new Date().getFullYear()}
-          ${esc(b.name)}
+          © ${new Date().getFullYear()} ${esc(b.name)}
         </span>
       </footer>
 
       <div class="mobileBar">
-
-        <a
-          href="tel:${esc(
-            b.phone.replace(/\s/g, "")
-          )}"
-        >
+        <a href="tel:${esc(
+          (b.phone || "").replace(/\s/g, "")
+        )}">
           Call Now
         </a>
 
@@ -502,11 +496,9 @@
             "Hello Dutta Restaurant, I would like to reserve a table."
           )}"
           target="_blank"
-          rel="noopener"
-        >
+          rel="noopener">
           WhatsApp
         </a>
-
       </div>
 
       <div class="toast" id="toast"></div>
@@ -531,8 +523,7 @@
       <aside
         class="cartDrawer"
         id="cartDrawer"
-        aria-hidden="true"
-      >
+        aria-hidden="true">
 
         <div class="drawerHead">
 
@@ -543,8 +534,7 @@
 
           <button
             class="iconClose"
-            data-close-cart
-          >
+            data-close-cart>
             ×
           </button>
 
@@ -552,22 +542,19 @@
 
         <div
           class="cartBody"
-          id="cartBody"
-        ></div>
+          id="cartBody">
+        </div>
 
         <div class="cartFoot">
 
           <div class="totalLine">
             <span>Total</span>
-            <strong id="cartTotal">
-              ₹0
-            </strong>
+            <strong id="cartTotal">₹0</strong>
           </div>
 
           <button
             class="btn gold full"
-            id="checkoutBtn"
-          >
+            id="checkoutBtn">
             Continue to Checkout →
           </button>
 
@@ -577,8 +564,8 @@
 
       <div
         class="drawerBackdrop"
-        id="drawerBackdrop"
-      ></div>
+        id="drawerBackdrop">
+      </div>
     `;
   }
 
@@ -587,15 +574,13 @@
       <div
         class="modal"
         id="loginModal"
-        aria-hidden="true"
-      >
+        aria-hidden="true">
 
         <div class="modalCard">
 
           <button
             class="iconClose"
-            data-close-login
-          >
+            data-close-login>
             ×
           </button>
 
@@ -616,8 +601,7 @@
               required
               name="name"
               autocomplete="name"
-              placeholder="Full name"
-            >
+              placeholder="Full name">
 
             <input
               required
@@ -626,13 +610,11 @@
               autocomplete="tel"
               pattern="[0-9]{10}"
               maxlength="10"
-              placeholder="10-digit mobile number"
-            >
+              placeholder="10-digit mobile number">
 
             <button
               class="btn gold full"
-              type="submit"
-            >
+              type="submit">
               Continue →
             </button>
 
@@ -644,6 +626,7 @@
           </small>
 
         </div>
+
       </div>
     `;
   }
@@ -653,15 +636,13 @@
       <div
         class="modal"
         id="paymentModal"
-        aria-hidden="true"
-      >
+        aria-hidden="true">
 
         <div class="modalCard paymentCard">
 
           <button
             class="iconClose"
-            data-close-payment
-          >
+            data-close-payment>
             ×
           </button>
 
@@ -673,8 +654,8 @@
 
           <div
             class="checkoutSummary"
-            id="checkoutSummary"
-          ></div>
+            id="checkoutSummary">
+          </div>
 
           <div class="payGrid">
 
@@ -707,11 +688,11 @@
           <small class="legalNote">
             Payment apps are opened using UPI intent.
             Final payment confirmation should be verified
-            by a payment gateway before fulfilling an
-            online order.
+            by a payment gateway before fulfilling an order.
           </small>
 
         </div>
+
       </div>
     `;
   }
@@ -721,31 +702,23 @@
     const nav = $("#nav");
     const hamb = $("#hamb");
 
+    if (!header || !nav || !hamb) return;
+
     hamb.onclick = () => {
       const open = nav.classList.toggle("open");
-
-      hamb.setAttribute(
-        "aria-expanded",
-        open
-      );
+      hamb.setAttribute("aria-expanded", open);
     };
 
-    $$(".nav a").forEach(a =>
+    $$(".nav a").forEach(a => {
       a.addEventListener("click", () => {
         nav.classList.remove("open");
+        hamb.setAttribute("aria-expanded", "false");
+      });
+    });
 
-        hamb.setAttribute(
-          "aria-expanded",
-          "false"
-        );
-      })
-    );
-
-    const onScroll = () =>
-      header.classList.toggle(
-        "scrolled",
-        scrollY > 45
-      );
+    const onScroll = () => {
+      header.classList.toggle("scrolled", scrollY > 45);
+    };
 
     addEventListener(
       "scroll",
@@ -768,10 +741,11 @@
     const tabs = $("#tabs");
     const items = $("#items");
 
+    if (!tabs || !items) return;
+
     if (!cats.length) {
       items.innerHTML =
         '<p style="color:#999">Menu coming soon.</p>';
-
       return;
     }
 
@@ -780,8 +754,7 @@
         (x, i) => `
           <button
             class="${i ? "" : "on"}"
-            data-c="${esc(x)}"
-          >
+            data-c="${esc(x)}">
             ${esc(x)}
           </button>
         `
@@ -789,21 +762,21 @@
       .join("");
 
     const show = cat => {
-      items.innerHTML = d.menu
+
+      items.innerHTML = (d.menu || [])
         .filter(x => x.cat === cat)
         .map(
           x => `
             <article
               class="dish"
-              data-name="${esc(x.name)}"
-            >
+              data-name="${esc(x.name)}">
 
               <div
                 class="dishImg"
                 style="background-image:url('${esc(
-                  x.image
-                )}')"
-              ></div>
+                  x.image || ""
+                )}')">
+              </div>
 
               <div class="dishShade"></div>
 
@@ -813,13 +786,9 @@
                   ${esc(x.cat)}
                 </div>
 
-                <h3>
-                  ${esc(x.name)}
-                </h3>
+                <h3>${esc(x.name)}</h3>
 
-                <p>
-                  ${esc(x.desc)}
-                </p>
+                <p>${esc(x.desc)}</p>
 
                 <div class="dishBottom">
 
@@ -831,8 +800,7 @@
 
                     <button
                       data-qty="-"
-                      aria-label="Decrease quantity"
-                    >
+                      aria-label="Decrease quantity">
                       −
                     </button>
 
@@ -840,8 +808,7 @@
 
                     <button
                       data-qty="+"
-                      aria-label="Increase quantity"
-                    >
+                      aria-label="Increase quantity">
                       +
                     </button>
 
@@ -851,8 +818,7 @@
 
                 <button
                   class="addCart"
-                  data-add="${esc(x.name)}"
-                >
+                  data-add="${esc(x.name)}">
                   Add to Cart
                 </button>
 
@@ -865,37 +831,45 @@
 
       setupTilt();
 
-      $$("[data-add]", items).forEach(btn => {
-        btn.onclick = () =>
-          addItem(btn.dataset.add);
-      });
+      $$("[data-add]", items)
+        .forEach(btn => {
+          btn.onclick = () =>
+            addItem(btn.dataset.add);
+        });
 
-      $$(".qtyControl", items).forEach(q => {
+      $$(".qtyControl", items)
+        .forEach(q => {
 
-        q.querySelector(
-          '[data-qty="-"]'
-        ).onclick = () =>
-          changeCardQty(q, -1);
+          const minus =
+            q.querySelector('[data-qty="-"]');
 
-        q.querySelector(
-          '[data-qty="+"]'
-        ).onclick = () =>
-          changeCardQty(q, 1);
+          const plus =
+            q.querySelector('[data-qty="+"]');
 
-      });
+          if (minus) {
+            minus.onclick = () =>
+              changeCardQty(q, -1);
+          }
+
+          if (plus) {
+            plus.onclick = () =>
+              changeCardQty(q, 1);
+          }
+
+        });
     };
 
     show(cats[0]);
 
     tabs.onclick = e => {
 
-      if (e.target.tagName !== "BUTTON") {
+      if (e.target.tagName !== "BUTTON")
         return;
-      }
 
-      $$("button", tabs).forEach(x =>
-        x.classList.remove("on")
-      );
+      $$("button", tabs)
+        .forEach(x =>
+          x.classList.remove("on")
+        );
 
       e.target.classList.add("on");
 
@@ -904,4 +878,33 @@
   }
 
   function changeCardQty(box, delta) {
-    const s = box.querySelect
+
+    const s = box.querySelector("span");
+
+    const n = Math.max(
+      1,
+      Math.min(
+        99,
+        (Number(s.textContent) || 1) + delta
+      )
+    );
+
+    s.textContent = n;
+  }
+
+  function setupTilt() {
+
+    if (
+      !matchMedia("(pointer:fine)").matches
+    )
+      return;
+
+    $$(".dish").forEach(card => {
+
+      card.onmousemove = e => {
+
+        const r =
+          card.getBoundingClientRect();
+
+        const x =
+   
