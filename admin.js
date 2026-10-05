@@ -1,17 +1,490 @@
-const KEY="dutta_restaurant_data_v2", get=()=>JSON.parse(localStorage.getItem(KEY)||JSON.stringify(DEFAULT_DATA)), save=d=>{localStorage.setItem(KEY,JSON.stringify(d));toast("Saved successfully");},toast=m=>{const x=document.createElement("div");x.className="toast";x.textContent=m;document.body.append(x);setTimeout(()=>x.remove(),2200)};
-const $=s=>document.querySelector(s), esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const PIN="2026";
-$("#loginBtn").onclick=()=>{if($("#pin").value===PIN){localStorage.setItem("dutta_admin_auth","1");$("#login").hidden=true;$("#app").hidden=false;page("overview")}else toast("Wrong PIN")};
-if(localStorage.getItem("dutta_admin_auth")==="1"){$("#login").hidden=true;$("#app").hidden=false}
-document.querySelectorAll(".side").forEach(b=>b.onclick=()=>{document.querySelectorAll(".side").forEach(x=>x.classList.remove("on"));b.classList.add("on");page(b.dataset.page)});
-function page(p){
- const d=get(), el=$("#page");
- if(p==="overview")el.innerHTML=`<h1>Good morning 👋</h1><p class="sub">Manage Dutta Restaurant without touching website files.</p><div class="cards"><div><b>${d.menu.length}</b><span>Menu items</span></div><div><b>${d.gallery.length}</b><span>Gallery images</span></div><div><b>${d.brand.phone}</b><span>Customer phone</span></div><div><b>₹</b><span>Prices editable</span></div></div><div class="notice"><b>How this works</b><p>Edit content here and click Save. The public website reads the saved content automatically on this browser. For owner access from multiple phones/computers, connect the same fields to Firebase/Supabase once; the UI is already structured for that upgrade.</p></div>`;
- if(p==="brand")brand(el,d); if(p==="hero")hero(el,d); if(p==="menu")menus(el,d); if(p==="gallery")gallery(el,d); if(p==="settings")settings(el,d);
+const KEY = "dutta_restaurant_data_v2";
+const PIN = "2026";
+
+const $ = (selector) => document.querySelector(selector);
+
+const esc = (value) =>
+  String(value ?? "").replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
+
+function getData() {
+  try {
+    const saved = localStorage.getItem(KEY);
+    return saved ? JSON.parse(saved) : structuredClone(DEFAULT_DATA);
+  } catch (e) {
+    return structuredClone(DEFAULT_DATA);
+  }
 }
-function field(k,v){return `<label>${k}<input value="${esc(v)}" data-f="${k}"></label>`}
-function brand(el,d){el.innerHTML=`<h1>Restaurant information</h1><p class=sub>Change contact and restaurant details here.</p><div class=form>${field("Restaurant name",d.brand.name)}${field("Owner name",d.brand.owner)}${field("Phone",d.brand.phone)}${field("WhatsApp number (country code)",d.brand.whatsapp)}${field("UPI ID",d.brand.upi)}${field("Address",d.brand.address)}${field("Opening hours",d.brand.hours)}${field("City",d.brand.city)}<button class=save id=save>Save changes</button></div>`;$("#save").onclick=()=>{let x=get();document.querySelectorAll("[data-f]").forEach(i=>{let m={"Restaurant name":"name","Owner name":"owner","Phone":"phone","WhatsApp number (country code)":"whatsapp","UPI ID":"upi","Address":"address","Opening hours":"hours","City":"city"};x.brand[m[i.dataset.f]]=i.value});save(x)}}
-function hero(el,d){el.innerHTML=`<h1>Homepage</h1><p class=sub>Update the first impression of the restaurant.</p><div class=form>${field("Eyebrow",d.hero.eyebrow)}${field("Main title",d.hero.title)}${field("Emphasis",d.hero.emphasis)}<label>Description<textarea data-f=desc>${esc(d.hero.description)}</textarea></label>${field("Hero image URL",d.hero.image)}<button class=save id=save>Save homepage</button></div>`;$("#save").onclick=()=>{let x=get(),m={Eyebrow:"eyebrow","Main title":"title",Emphasis:"emphasis","Hero image URL":"image"};document.querySelectorAll("[data-f]").forEach(i=>{if(i.dataset.f==="desc")x.hero.description=i.value;else x.hero[m[i.dataset.f]]=i.value});save(x)}}
-function menus(el,d){el.innerHTML=`<h1>Menu & prices</h1><p class=sub>Add, edit or remove dishes. Changes appear on the public site after saving.</p><button class=save id=add>Add new dish +</button><div id=list class=menulist>${d.menu.map((x,i)=>`<div class=item data-i="${i}"><div><input data-k=name value="${esc(x.name)}"><input data-k=cat value="${esc(x.cat)}"><input data-k=price value="${esc(x.price)}"><textarea data-k=desc>${esc(x.desc)}</textarea><input data-k=image value="${esc(x.image)}"></div><button class=delete data-del="${i}">Delete</button></div>`).join("")}</div><button class=save id=save>Save all menu changes</button>`;$("#add").onclick=()=>{let x=get();x.menu.push({cat:"New Category",name:"New Dish",desc:"Dish description",price:"0",image:"https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=80"});save(x);page("menu")};$("#save").onclick=()=>{let x=get();document.querySelectorAll(".item").forEach((row,i)=>{row.querySelectorAll("[data-k]").forEach(z=>x.menu[i][z.dataset.k]=z.value)});save(x)};document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{let x=get();x.menu.splice(+b.dataset.del,1);save(x);page("menu")})}
-function gallery(el,d){el.innerHTML=`<h1>Gallery</h1><p class=sub>Paste image URLs. Replace stock images with the restaurant's own photos before delivery.</p><div class=form>${d.gallery.map((x,i)=>`<label>Image ${i+1}<input class=gimg data-i="${i}" value="${esc(x)}"></label>`).join("")}<button class=save id=save>Save gallery</button></div>`;$("#save").onclick=()=>{let x=get();x.gallery=[...document.querySelectorAll(".gimg")].map(i=>i.value);save(x)}}
-function settings(el,d){el.innerHTML=`<h1>Backup & reset</h1><p class=sub>Keep a backup before handing the site to the owner.</p><button class=save id=export>Export website content JSON</button><button class=delete id=reset>Reset to original demo content</button><div class=notice><b>Important for the final client version</b><p>This browser-based admin works without replacing files. For true multi-device owner login and cloud-synced updates, connect this data store to Firebase or Supabase. No passwords or API keys should be placed in public HTML.</p></div>`;$("#export").onclick=()=>{let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(get(),null,2)],{type:"application/json"}));a.download="dutta-restaurant-content.json";a.click()};$("#reset").onclick=()=>{if(confirm("Reset all content?")){localStorage.removeItem(KEY);toast("Reset complete");page("overview")}}}
+
+function saveData(data) {
+  localStorage.setItem(KEY, JSON.stringify(data));
+  toast("Saved successfully");
+}
+
+function toast(message) {
+  const x = document.createElement("div");
+  x.className = "toast";
+  x.textContent = message;
+  document.body.appendChild(x);
+
+  setTimeout(() => {
+    x.remove();
+  }, 2200);
+}
+
+function showApp() {
+  $("#login").hidden = true;
+  $("#app").hidden = false;
+}
+
+function showLogin() {
+  $("#login").hidden = false;
+  $("#app").hidden = true;
+}
+
+function login() {
+  const pin = $("#pin").value.trim();
+
+  if (pin === PIN) {
+    localStorage.setItem("dutta_admin_auth", "1");
+    showApp();
+    page("overview");
+  } else {
+    toast("Wrong PIN");
+  }
+}
+
+function field(label, value, key) {
+  return `
+    <label>
+      ${esc(label)}
+      <input value="${esc(value)}" data-field="${esc(key)}">
+    </label>
+  `;
+}
+
+function page(name) {
+  const data = getData();
+  const el = $("#page");
+
+  if (!el) return;
+
+  if (name === "overview") {
+    el.innerHTML = `
+      <h1>Good morning 👋</h1>
+      <p class="sub">
+        Manage Dutta Restaurant without touching website files.
+      </p>
+
+      <div class="cards">
+        <div>
+          <b>${data.menu.length}</b>
+          <span>Menu items</span>
+        </div>
+
+        <div>
+          <b>${data.gallery.length}</b>
+          <span>Gallery images</span>
+        </div>
+
+        <div>
+          <b>${esc(data.brand.phone)}</b>
+          <span>Customer phone</span>
+        </div>
+
+        <div>
+          <b>₹</b>
+          <span>Prices editable</span>
+        </div>
+      </div>
+
+      <div class="notice">
+        <b>How this works</b>
+        <p>
+          Edit content here and click Save.
+          The public website reads the saved content automatically
+          on this browser.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  if (name === "brand") {
+    brandPage(el, data);
+    return;
+  }
+
+  if (name === "hero") {
+    heroPage(el, data);
+    return;
+  }
+
+  if (name === "menu") {
+    menuPage(el, data);
+    return;
+  }
+
+  if (name === "gallery") {
+    galleryPage(el, data);
+    return;
+  }
+
+  if (name === "settings") {
+    settingsPage(el, data);
+    return;
+  }
+}
+
+function brandPage(el, data) {
+  el.innerHTML = `
+    <h1>Restaurant information</h1>
+
+    <p class="sub">
+      Change contact and restaurant details here.
+    </p>
+
+    <div class="form">
+
+      ${field("Restaurant name", data.brand.name, "name")}
+
+      ${field("Owner name", data.brand.owner, "owner")}
+
+      ${field("Phone", data.brand.phone, "phone")}
+
+      ${field(
+        "WhatsApp number (country code)",
+        data.brand.whatsapp,
+        "whatsapp"
+      )}
+
+      ${field("UPI ID", data.brand.upi, "upi")}
+
+      ${field("Address", data.brand.address, "address")}
+
+      ${field("Opening hours", data.brand.hours, "hours")}
+
+      ${field("City", data.brand.city, "city")}
+
+      <button class="save" id="saveBrand">
+        Save changes
+      </button>
+
+    </div>
+  `;
+
+  $("#saveBrand").onclick = () => {
+    const x = getData();
+
+    document.querySelectorAll("[data-field]").forEach((input) => {
+      x.brand[input.dataset.field] = input.value;
+    });
+
+    saveData(x);
+  };
+}
+
+function heroPage(el, data) {
+  el.innerHTML = `
+    <h1>Homepage</h1>
+
+    <p class="sub">
+      Update the first impression of the restaurant.
+    </p>
+
+    <div class="form">
+
+      ${field("Eyebrow", data.hero.eyebrow, "eyebrow")}
+
+      ${field("Main title", data.hero.title, "title")}
+
+      ${field("Emphasis", data.hero.emphasis, "emphasis")}
+
+      <label>
+        Description
+        <textarea data-field="description">${esc(
+          data.hero.description
+        )}</textarea>
+      </label>
+
+      ${field(
+        "Hero image URL",
+        data.hero.image,
+        "image"
+      )}
+
+      <button class="save" id="saveHero">
+        Save homepage
+      </button>
+
+    </div>
+  `;
+
+  $("#saveHero").onclick = () => {
+    const x = getData();
+
+    document
+      .querySelectorAll("[data-field]")
+      .forEach((input) => {
+        x.hero[input.dataset.field] = input.value;
+      });
+
+    saveData(x);
+  };
+}
+
+function menuPage(el, data) {
+  el.innerHTML = `
+    <h1>Menu & prices</h1>
+
+    <p class="sub">
+      Add, edit or remove dishes.
+      Changes appear on the public site after saving.
+    </p>
+
+    <button class="save" id="addDish">
+      Add new dish +
+    </button>
+
+    <div id="menuList" class="menulist">
+
+      ${data.menu.map((item, index) => `
+        <div class="item" data-index="${index}">
+
+          <div>
+
+            <input
+              data-key="name"
+              value="${esc(item.name)}"
+              placeholder="Dish name"
+            >
+
+            <input
+              data-key="cat"
+              value="${esc(item.cat)}"
+              placeholder="Category"
+            >
+
+            <input
+              data-key="price"
+              value="${esc(item.price)}"
+              placeholder="Price"
+            >
+
+            <textarea
+              data-key="desc"
+              placeholder="Description"
+            >${esc(item.desc)}</textarea>
+
+            <input
+              data-key="image"
+              value="${esc(item.image)}"
+              placeholder="Image URL"
+            >
+
+          </div>
+
+          <button
+            class="delete"
+            data-delete="${index}"
+          >
+            Delete
+          </button>
+
+        </div>
+      `).join("")}
+
+    </div>
+
+    <button class="save" id="saveMenu">
+      Save all menu changes
+    </button>
+  `;
+
+  $("#addDish").onclick = () => {
+    const x = getData();
+
+    x.menu.push({
+      cat: "New Category",
+      name: "New Dish",
+      desc: "Dish description",
+      price: "0",
+      image:
+        "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=80"
+    });
+
+    saveData(x);
+    menuPage(el, x);
+  };
+
+  $("#saveMenu").onclick = () => {
+    const x = getData();
+
+    document.querySelectorAll(".item").forEach((row) => {
+      const index = Number(row.dataset.index);
+
+      row.querySelectorAll("[data-key]").forEach((input) => {
+        x.menu[index][input.dataset.key] = input.value;
+      });
+    });
+
+    saveData(x);
+  };
+
+  document.querySelectorAll("[data-delete]").forEach((button) => {
+    button.onclick = () => {
+      const x = getData();
+      const index = Number(button.dataset.delete);
+
+      x.menu.splice(index, 1);
+
+      saveData(x);
+      menuPage(el, x);
+    };
+  });
+}
+
+function galleryPage(el, data) {
+  el.innerHTML = `
+    <h1>Gallery</h1>
+
+    <p class="sub">
+      Paste image URLs.
+      Replace stock images with the restaurant's own photos before delivery.
+    </p>
+
+    <div class="form">
+
+      ${data.gallery.map((image, index) => `
+        <label>
+          Image ${index + 1}
+
+          <input
+            class="galleryImage"
+            data-index="${index}"
+            value="${esc(image)}"
+          >
+        </label>
+      `).join("")}
+
+      <button class="save" id="saveGallery">
+        Save gallery
+      </button>
+
+    </div>
+  `;
+
+  $("#saveGallery").onclick = () => {
+    const x = getData();
+
+    x.gallery = [...document.querySelectorAll(".galleryImage")]
+      .map((input) => input.value);
+
+    saveData(x);
+  };
+}
+
+function settingsPage(el, data) {
+  el.innerHTML = `
+    <h1>Backup & reset</h1>
+
+    <p class="sub">
+      Keep a backup before handing the site to the owner.
+    </p>
+
+    <button class="save" id="exportData">
+      Export website content JSON
+    </button>
+
+    <button class="delete" id="resetData">
+      Reset to original demo content
+    </button>
+
+    <div class="notice">
+
+      <b>Important for the final client version</b>
+
+      <p>
+        The current admin stores changes inside this browser.
+        For true multi-device owner access, the next version
+        should connect this dashboard to Firebase or Supabase.
+      </p>
+
+    </div>
+  `;
+
+  $("#exportData").onclick = () => {
+    const blob = new Blob(
+      [JSON.stringify(getData(), null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "dutta-restaurant-content.json";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  };
+
+  $("#resetData").onclick = () => {
+    if (confirm("Reset all content?")) {
+      localStorage.removeItem(KEY);
+      toast("Reset complete");
+      page("overview");
+    }
+  };
+}
+
+/* LOGIN */
+
+const loginButton = $("#loginBtn");
+
+if (loginButton) {
+  loginButton.onclick = login;
+}
+
+const pinInput = $("#pin");
+
+if (pinInput) {
+  pinInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      login();
+    }
+  });
+}
+
+/* SIDEBAR */
+
+document.querySelectorAll(".side").forEach((button) => {
+  button.onclick = () => {
+
+    document
+      .querySelectorAll(".side")
+      .forEach((item) => item.classList.remove("on"));
+
+    button.classList.add("on");
+
+    page(button.dataset.page);
+  };
+});
+
+/* RESTORE LOGIN SESSION */
+
+if (localStorage.getItem("dutta_admin_auth") === "1") {
+  showApp();
+  page("overview");
+} else {
+  showLogin();
+}
